@@ -1,621 +1,193 @@
-<!doctype html>
-<html lang="ar" dir="rtl">
+<!DOCTYPE html>
+<html lang="ar">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>RESPECT MDT — Full Interactive System</title>
-
-<!-- Leaflet for interactive map -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  integrity="sha256-sA+e2H6k1gkQYB3Q5m3r0s2K0l7w2g2yL2w0q2q6iAo=" crossorigin=""/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-  integrity="sha256-o9N1j7B6Gg2kXc1w2b3v4k5j6l7m8n9o0p1q2r3s4t5=" crossorigin=""></script>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RESPECT POLICE DEPARTMENT</title>
 <style>
-/* ====== STYLES ====== */
-:root{
-  --bg1:#071024; --bg2:#0f172a; --accent:#8be9fd; --accent-dark:#00d1c1;
-}
-*{box-sizing:border-box}
-body{margin:0;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:linear-gradient(180deg,var(--bg2),#05101b); color:#e6eef8; -webkit-font-smoothing:antialiased;}
-header{position:fixed;top:0;left:0;right:0;height:68px;background:rgba(2,6,23,0.75);display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid rgba(139,233,253,0.06);z-index:999;}
-.brand{display:flex;gap:12px;align-items:center}
-.logo{width:44px;height:44px;border-radius:8px;background:linear-gradient(90deg,var(--accent),var(--accent-dark));display:flex;align-items:center;justify-content:center;font-weight:800;color:#001;box-shadow:0 6px 20px rgba(0,0,0,0.6)}
-.title{font-weight:700;font-size:18px}
-.header-right{display:flex;align-items:center;gap:10px}
-.btn{background:var(--accent);color:#001;border:none;padding:8px 12px;border-radius:8px;font-weight:700;cursor:pointer}
-.btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:#cfeff4}
-.container{max-width:1200px;margin:96px auto 48px;padding:0 18px}
-.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
-.col-4{grid-column:span 4}
-.col-8{grid-column:span 8}
-.card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
-.small{font-size:13px;color:#9fbec5}
-.section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.input, textarea, select{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:inherit}
-textarea{min-height:80px}
-.table{width:100%;border-collapse:collapse;font-size:13px}
-.table th, .table td{padding:8px;border-bottom:1px solid rgba(255,255,255,0.03);text-align:right}
-.badge{display:inline-block;padding:5px 8px;border-radius:999px;background:linear-gradient(90deg,var(--accent),var(--accent-dark));color:#001;font-weight:800}
-.map-wrap{height:360px;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.04)}
-.notifications{max-height:200px;overflow:auto}
-.notification{padding:8px;border-radius:8px;background:linear-gradient(90deg, rgba(139,233,253,0.06), rgba(124,58,237,0.02));margin-bottom:8px;border:1px solid rgba(255,255,255,0.02)}
-.controls{display:flex;gap:8px;flex-wrap:wrap}
-.toolbar{display:flex;gap:8px;align-items:center}
-.right-panel{display:flex;flex-direction:column;gap:12px}
-
-/* responsive */
-@media (max-width:900px){
-  .col-4,.col-8{grid-column:span 12}
-  .container{padding:12px}
-  header{padding:10px}
-}
+body { font-family: Arial, sans-serif; background-color: #121212; color: #f0f0f0; margin: 0; }
+header { background-color: #1a1a1a; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; color:#0ff; }
+.container { padding: 20px; }
+input, select, button { padding: 10px; margin: 5px; border-radius: 5px; border: none; }
+input, select { width: 200px; }
+button { background-color: #0a84ff; color: white; cursor: pointer; }
+button:hover { background-color: #0066cc; }
+.hidden { display: none; }
+.dashboard-section { margin-top: 20px; border: 1px solid #333; padding: 15px; border-radius: 10px; }
+.map-container { height: 300px; margin-top: 20px; border: 1px solid #333; border-radius: 10px; background-color: #222; display: flex; align-items: center; justify-content: center; color: #888; }
+table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+td, th { border: 1px solid #333; padding: 8px; text-align: center; }
+th { background-color: #1a1a1a; }
 </style>
 </head>
 <body>
-
-<header>
-  <div class="brand">
-    <div class="logo">R</div>
-    <div>
-      <div class="title">RESPECT MDT — النظام الشامل</div>
-      <div class="small">نظام محاكاة لإدارة الشرطة والجيش — للإستخدام التعليمي والتمثيلي</div>
-    </div>
-  </div>
-
-  <div class="header-right">
-    <div id="notif-bell" style="position:relative">
-      <button class="btn ghost" onclick="toggleNotifications()">🔔 إشعارات <span id="notif-count" style="margin-left:6px;background:#ff6b6b;padding:2px 6px;border-radius:999px;font-weight:700;color:#fff;display:none">0</span></button>
-      <div id="notif-dropdown" style="position:absolute;right:0;top:44px;background:linear-gradient(180deg,#041025,#02101a);border:1px solid rgba(255,255,255,0.03);padding:12px;border-radius:10px;display:none;width:320px;box-shadow:0 6px 40px rgba(0,0,0,0.6);z-index:999;">
-        <div class="small" style="margin-bottom:6px">الإشعارات</div>
-        <div id="notif-list" class="notifications"></div>
-      </div>
-    </div>
-    <div id="user-area" style="display:flex;align-items:center;gap:8px">
-      <div id="user-badge" class="badge" style="display:none"></div>
-      <button id="logout-btn" class="btn ghost" style="display:none" onclick="logout()">تسجيل الخروج</button>
-    </div>
-  </div>
-</header>
-
+<header>RESPECT POLICE DEPARTMENT</header>
 <div class="container">
-  <!-- Top row -->
-  <div class="grid" style="margin-bottom:16px">
-    <div class="col-8">
-      <div class="card">
-        <div class="section-title">
-          <h3>تسجيل الدخول</h3>
-          <div class="small">استخدم حساب Dev للتجربة (Dev / 206600911)</div>
-        </div>
-        <div style="display:flex;gap:12px;flex-wrap:wrap">
-          <div style="flex:1;min-width:220px">
-            <input id="login-username" class="input" placeholder="اسم المستخدم"/>
-          </div>
-          <div style="width:200px">
-            <input id="login-password" class="input" placeholder="كلمة المرور" type="password"/>
-          </div>
-          <div style="width:140px">
-            <button class="btn" onclick="doLogin()">دخول</button>
-          </div>
-          <div style="width:160px">
-            <button class="btn ghost" onclick="autoFill()">تعبئة Dev</button>
-          </div>
-        </div>
-        <div id="login-msg" class="small" style="margin-top:8px;color:#ffdcdc"></div>
-      </div>
-    </div>
 
-    <div class="col-4 right-panel">
-      <div class="card">
-        <div class="section-title">
-          <h3>حالة النظام</h3>
-          <div class="small">إحصائيات سريعة</div>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <div class="small">المستخدمين</div>
-            <div style="font-weight:800;font-size:20px" id="stat-users">0</div>
-          </div>
-          <div>
-            <div class="small">الحوادث</div>
-            <div style="font-weight:800;font-size:20px" id="stat-incidents">0</div>
-          </div>
-          <div>
-            <div class="small">سجلات جنائية</div>
-            <div style="font-weight:800;font-size:20px" id="stat-criminals">0</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="section-title"><h3>خرائط</h3><div class="small">Grand Yak (تجريبي)</div></div>
-        <div class="map-wrap" id="mini-map" style="height:180px"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Main area -->
-  <div class="grid">
-    <!-- LEFT: map + incidents -->
-    <div class="col-8">
-      <div class="card">
-        <div class="section-title">
-          <h3>الخريطة التفاعلية — انقر لتثبيت حادث أو استخدم النموذج</h3>
-          <div class="controls">
-            <button class="btn ghost" onclick="centerMapToDefault()">مركز الخريطة</button>
-            <button class="btn" onclick="simulateOtherLogin()">محاكاة دخول (آخر)</button>
-            <button class="btn ghost" onclick="clearIncidents()">مسح الحوادث (تجريبي)</button>
-          </div>
-        </div>
-        <div id="map" style="height:420px;border-radius:10px;overflow:hidden"></div>
-
-        <div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap">
-          <div style="flex:1;min-width:220px"><input id="incident-title" class="input" placeholder="عنوان الحادث"/></div>
-          <div style="width:140px"><input id="incident-lat" class="input" placeholder="خط العرض (اختياري)"/></div>
-          <div style="width:140px"><input id="incident-lng" class="input" placeholder="خط الطول (اختياري)"/></div>
-          <div style="width:160px"><button class="btn" onclick="pinIncidentForm()">تثبيت الحادث</button></div>
-        </div>
-        <div class="small" style="margin-top:8px">يمكنك النقر على الخريطة لتثبيت الحوادث بسرعة — الإشعار سيظهر للجميع.</div>
-      </div>
-
-      <div class="card" style="margin-top:12px">
-        <div class="section-title"><h3>قائمة الحوادث</h3><div class="small">آخر البلاغات</div></div>
-        <div id="incidents-list" style="max-height:220px;overflow:auto"></div>
-      </div>
-    </div>
-
-    <!-- RIGHT: admin panels -->
-    <div class="col-4">
-      <div class="card">
-        <div class="section-title"><h3>إنشاء حساب / رتبة</h3><div class="small">أنشئ مستخدم جديد (Admin)</div></div>
-        <div style="display:grid;gap:8px">
-          <input id="new-username" class="input" placeholder="اسم المستخدم"/>
-          <input id="new-password" class="input" placeholder="كلمة المرور"/>
-          <select id="new-role" class="input">
-            <option value="officer">ضابط (Officer)</option>
-            <option value="commander">قائد (Commander)</option>
-            <option value="army">جندي (Army)</option>
-          </select>
-          <input id="new-rank" class="input" placeholder="الرتبة (Captain, Lieutenant...)"/>
-          <input id="new-badge" class="input" placeholder="رقم الشارة"/>
-          <div style="display:flex;gap:8px">
-            <button class="btn" onclick="createNewUser()">إنشاء</button>
-            <button class="btn ghost" onclick="exportUsersCSV()">تصدير CSV</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="card" style="margin-top:12px">
-        <div class="section-title"><h3>السجلات الجنائية</h3><div class="small">بحث وتصدير</div></div>
-        <div style="display:flex;gap:8px;margin-bottom:8px">
-          <input id="search-criminal" class="input" placeholder="ابحث بالاسم أو الرقم" oninput="renderCriminals()"/>
-          <button class="btn ghost" onclick="exportCriminalsCSV()">تصدير CSV</button>
-        </div>
-        <div id="criminals-list" style="max-height:240px;overflow:auto"></div>
-      </div>
-
-      <div class="card" style="margin-top:12px">
-        <div class="section-title"><h3>إدارة الحسابات</h3><div class="small">تعطيل، تفعيل، إعادة ضبط كلمة مرور</div></div>
-        <div style="display:grid;gap:8px">
-          <select id="manage-user-list" class="input"></select>
-          <div style="display:flex;gap:8px">
-            <button class="btn ghost" onclick="toggleSuspendSelected()">تفعيل/تعطيل</button>
-            <button class="btn" onclick="forceLogoutSelected()">فصل جلسة</button>
-          </div>
-          <div style="display:flex;gap:8px">
-            <input id="reset-pass" class="input" placeholder="كلمة مرور جديدة"/>
-            <button class="btn ghost" onclick="resetPasswordSelected()">إعادة ضبط</button>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <div style="height:40px"></div>
+<!-- Login -->
+<div id="login-section">
+  <h2>Login</h2>
+  <input type="text" id="login-user" placeholder="Username"><br>
+  <input type="password" id="login-pass" placeholder="Password"><br>
+  <button onclick="login()">Login</button>
+  <p id="login-msg" style="color:red;"></p>
 </div>
 
-<!-- Hidden notification template (for copy) -->
-<template id="notif-template">
-  <div class="notification"><div class="small" style="font-weight:700" data-title></div><div class="small" data-body style="opacity:0.9;margin-top:4px"></div><div class="small" style="opacity:0.7;margin-top:6px" data-time></div></div>
-</template>
+<!-- Dashboard -->
+<div id="dashboard-section" class="hidden">
+  <h2 id="welcome-msg">Welcome</h2>
+
+  <!-- Add Citizen/Criminal -->
+  <div class="dashboard-section">
+    <h3>Add Citizen / Criminal</h3>
+    <input type="text" id="person-name" placeholder="Name"><br>
+    <input type="text" id="person-id" placeholder="National Number"><br>
+    <input type="text" id="person-address" placeholder="Address"><br>
+    <input type="text" id="person-gender" placeholder="Gender"><br>
+    <select id="person-type">
+      <option value="Citizen">Citizen</option>
+      <option value="Criminal">Criminal</option>
+    </select><br>
+    <input type="text" id="person-vehicle" placeholder="Vehicle Plate (Optional)"><br>
+    <button onclick="addPerson()">Add</button>
+  </div>
+
+  <!-- Persons Table -->
+  <div class="dashboard-section">
+    <h3>Persons List</h3>
+    <table id="persons-table">
+      <tr><th>Name</th><th>ID</th><th>Address</th><th>Gender</th><th>Type</th><th>Vehicle</th><th>Actions</th></tr>
+    </table>
+  </div>
+
+  <!-- Vehicles -->
+  <div class="dashboard-section">
+    <h3>Vehicles</h3>
+    <input type="text" id="vehicle-number" placeholder="Plate Number">
+    <input type="text" id="vehicle-owner" placeholder="Owner Name">
+    <button onclick="addVehicle()">Add Vehicle</button>
+    <table id="vehicles-table">
+      <tr><th>Plate</th><th>Owner</th><th>Actions</th></tr>
+    </table>
+  </div>
+
+  <!-- Map -->
+  <div class="map-container">
+    Map Placeholder - Emergency Hamburg (Roblox style)
+  </div>
+
+  <!-- Manage Users -->
+  <div class="dashboard-section">
+    <h3>Manage Officers</h3>
+    <input type="text" id="manage-user" placeholder="Officer Username"><br>
+    <button onclick="suspendUser()">Suspend</button>
+    <button onclick="banUser()">Ban</button>
+    <input type="number" id="add-xp" placeholder="Add XP">
+    <button onclick="addXP()">Add XP</button>
+  </div>
+
+</div>
 
 <script>
-/* =========================
-   Simulated backend (in-memory)
-   ========================= */
-const DB = {
-  users: [
-    {id:1, username:'Dev', password:'206600911', role:'admin', rank:'Minister', badge:'000', onDuty:false, suspended:false, lastSeen: null}
-  ],
-  criminals: [],
-  incidents: [],
-  sessions: [] // simulated sessions
-};
+// Users, persons, vehicles
+let users = JSON.parse(localStorage.getItem('users')) || [
+  {username:'dev', password:'206600911', rank:'Commander', xp:0, status:'Active'}
+];
+let persons = JSON.parse(localStorage.getItem('persons')) || [];
+let vehicles = JSON.parse(localStorage.getItem('vehicles')) || [];
 
-let currentUser = null;
-
-/* =========================
-   Utilities
-   ========================= */
-function uid(){ return Math.floor(Math.random()*1e9).toString(36); }
-function now(){ return (new Date()).toLocaleString(); }
-function findUserByUsername(u){ return DB.users.find(x=>x.username===u); }
-function refreshStats(){
-  document.getElementById('stat-users').innerText = DB.users.length;
-  document.getElementById('stat-incidents').innerText = DB.incidents.length;
-  document.getElementById('stat-criminals').innerText = DB.criminals.length;
-  populateManageList();
-}
-function pushNotification(title, body){
-  const notifList = document.getElementById('notif-list');
-  const tpl = document.getElementById('notif-template').content.cloneNode(true);
-  tpl.querySelector('[data-title]').innerText = title;
-  tpl.querySelector('[data-body]').innerText = body;
-  tpl.querySelector('[data-time]').innerText = now();
-  notifList.prepend(tpl);
-  // show badge
-  const badge = document.getElementById('notif-count');
-  badge.style.display = 'inline-block';
-  badge.innerText = (parseInt(badge.innerText||'0')+1).toString();
-  // small toast
-  smallToast(title + ' — ' + body);
-}
-function smallToast(msg){
-  const t = document.createElement('div');
-  t.style.position='fixed'; t.style.left='20px'; t.style.bottom='20px';
-  t.style.background='linear-gradient(90deg,#00fff7,#7c3aed)'; t.style.color='#001'; t.style.padding='10px 14px'; t.style.borderRadius='10px';
-  t.style.boxShadow='0 10px 30px rgba(0,0,0,0.4)'; t.style.zIndex=9999; t.innerText=msg;
-  document.body.appendChild(t);
-  setTimeout(()=>t.style.opacity='0.0',3200);
-  setTimeout(()=>t.remove(),3600);
-}
-
-/* =========================
-   Notifications dropdown
-   ========================= */
-function toggleNotifications(){
-  const d = document.getElementById('notif-dropdown');
-  d.style.display = (d.style.display==='block')? 'none' : 'block';
-  if(d.style.display==='block'){
-    // clear badge
-    document.getElementById('notif-count').style.display='none';
-    document.getElementById('notif-count').innerText='0';
-  }
-}
-document.addEventListener('click', (e)=>{
-  const nd = document.getElementById('notif-dropdown');
-  if(!e.target.closest('#notif-bell') && nd.style.display==='block') nd.style.display='none';
-});
-
-/* =========================
-   Map (Leaflet)
-   ========================= */
-let map, markersLayer;
-function initMap(){
-  // default center — fictional "Grand Yak"
-  map = L.map('map', {attributionControl:false}).setView([33.9, -6.9], 12);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19
-  }).addTo(map);
-  markersLayer = L.layerGroup().addTo(map);
-
-  // mini map
-  const mini = L.map('mini-map', {attributionControl:false, zoomControl:false, dragging:false, scrollWheelZoom:false, doubleClickZoom:false}).setView([33.9,-6.9],12);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mini);
-
-  map.on('click', function(e){
-    // open a quick dialog to pin
-    const title = prompt('اكتب عنوان الحادث لتثبيته هنا (أو إلغاء):');
-    if(title) {
-      addIncident({title, lat: e.latlng.lat, lng: e.latlng.lng, officer: currentUser? currentUser.username : 'Unknown', time: now()});
-      pushNotification('حادث جديد', (currentUser? currentUser.username : 'مجهول') + ' ثبت حادث: ' + title);
-    }
-  });
-}
-function centerMapToDefault(){ map.setView([33.9,-6.9],12); }
-
-/* =========================
-   Incidents functions
-   ========================= */
-function addIncident({title, lat=0, lng=0, officer='system', time=now()}){
-  const id = DB.incidents.length + 1;
-  const item = {id, title, lat, lng, officer, time};
-  DB.incidents.push(item);
-  // marker
-  const marker = L.marker([lat||33.9, lng||-6.9]).bindPopup(`<b>${title}</b><div class="small">by ${officer}<br>${time}</div>`);
-  markersLayer.addLayer(marker);
-  // UI update
-  renderIncidents();
-  refreshStats();
-}
-function pinIncidentForm(){
-  const title = document.getElementById('incident-title').value.trim();
-  const lat = parseFloat(document.getElementById('incident-lat').value) || null;
-  const lng = parseFloat(document.getElementById('incident-lng').value) || null;
-  if(!title){ alert('اكتب عنوان الحادث'); return; }
-  addIncident({title, lat: lat || 33.9, lng: lng || -6.9, officer: currentUser? currentUser.username:'Unknown'});
-  pushNotification('حادث مثبت', (currentUser? currentUser.username:'مجهول') + ' — ' + title);
-  document.getElementById('incident-title').value='';
-  document.getElementById('incident-lat').value='';
-  document.getElementById('incident-lng').value='';
-}
-function renderIncidents(){
-  const list = document.getElementById('incidents-list');
-  list.innerHTML = '';
-  DB.incidents.slice().reverse().forEach(i=>{
-    const el = document.createElement('div');
-    el.style.padding='8px'; el.style.borderBottom='1px solid rgba(255,255,255,0.03)';
-    el.innerHTML = `<div style="display:flex;justify-content:space-between"><div><b>${i.title}</b><div class="small">by ${i.officer} — ${i.time}</div></div><div style="text-align:left"><button class="btn ghost" onclick="zoomToIncident(${i.id})">عرض</button> <button class="btn" onclick="announceIncident(${i.id})">إرسال إشعار</button></div></div>`;
-    list.appendChild(el);
-  });
-  refreshStats();
-}
-function zoomToIncident(id){
-  const inc = DB.incidents.find(i=>i.id===id);
-  if(inc) map.setView([inc.lat||33.9, inc.lng||-6.9], 15);
-}
-function announceIncident(id){
-  const inc = DB.incidents.find(i=>i.id===id);
-  if(inc){
-    pushNotification('إشعار حادث', `${inc.officer} — ${inc.title}`);
-  }
-}
-function clearIncidents(){ DB.incidents = []; markersLayer.clearLayers(); renderIncidents(); refreshStats(); }
-
-/* =========================
-   Users CRUD + sessions
-   ========================= */
-function createNewUser(){
-  const u = document.getElementById('new-username').value.trim();
-  const p = document.getElementById('new-password').value.trim();
-  const role = document.getElementById('new-role').value;
-  const rank = document.getElementById('new-rank').value.trim();
-  const badge = document.getElementById('new-badge').value.trim();
-  if(!u || !p){ alert('المرجو إدخال اسم مستخدم و كلمة مرور'); return; }
-  if(findUserByUsername(u)){ alert('اسم المستخدم مستعمل'); return; }
-  const id = DB.users.length + 1;
-  DB.users.push({id, username:u, password:p, role, rank, badge, onDuty:false, suspended:false, lastSeen:null});
-  refreshStats();
-  pushNotification('حساب جديد', `${u} أنشئ (${role})`);
-  populateManageList();
-  fillUsersTables();
-  // clear fields
-  document.getElementById('new-username').value=''; document.getElementById('new-password').value=''; document.getElementById('new-rank').value=''; document.getElementById('new-badge').value='';
-}
-
-function doLogin(){
-  const u = document.getElementById('login-username').value.trim();
-  const p = document.getElementById('login-password').value.trim();
-  const user = DB.users.find(x=>x.username===u && x.password===p);
-  const msg = document.getElementById('login-msg');
-  if(!user){ msg.innerText = 'خطأ في اسم المستخدم أو كلمة المرور'; return; }
-  if(user.suspended){ msg.innerText = 'الحساب موقوف'; return; }
-  currentUser = user;
-  user.lastSeen = now();
-  // session simulate
-  DB.sessions.push({sessionId: uid(), username: user.username, started: now(), active: true});
-  document.getElementById('login-msg').innerText = 'تم تسجيل الدخول باسم ' + user.username;
-  document.getElementById('user-badge').style.display='inline-block';
-  document.getElementById('user-badge').innerText = user.username + ' • ' + (user.rank || user.role);
-  document.getElementById('logout-btn').style.display='inline-block';
-  pushNotification('دخول مستخدم', user.username + ' دخل النظام');
-  refreshStats();
-  fillUsersTables();
-  // show correct dashboard links: simplified: user can still use UI
-}
-function logout(){
-  if(!currentUser) return;
-  // end sessions
-  DB.sessions.forEach(s=> { if(s.username===currentUser.username) s.active=false; });
-  pushNotification('خروج مستخدم', currentUser.username + ' خرج من النظام');
-  currentUser = null;
-  document.getElementById('user-badge').style.display='none';
-  document.getElementById('logout-btn').style.display='none';
-  document.getElementById('login-msg').innerText = 'تم تسجيل الخروج';
-  refreshStats();
-}
-
-/* Force logout selected user */
-function forceLogoutSelected(){
-  const sel = document.getElementById('manage-user-list').value;
-  if(!sel) return; 
-  DB.sessions.forEach(s=>{ if(s.username===sel) s.active=false; });
-  pushNotification('فصل جلسة', sel + ' فصلت جلسته من قبل المشرف');
-  fillUsersTables();
-}
-
-/* suspend/activate toggle */
-function toggleSuspendSelected(){
-  const sel = document.getElementById('manage-user-list').value;
-  if(!sel) return;
-  const u = findUserByUsername(sel);
-  if(!u) return;
-  u.suspended = !u.suspended;
-  pushNotification('تغيير حالة', `${u.username} ${u.suspended? 'معلق':'مفعل'}`);
-  fillUsersTables();
-  refreshStats();
-}
-
-/* reset password */
-function resetPasswordSelected(){
-  const sel = document.getElementById('manage-user-list').value;
-  const np = document.getElementById('reset-pass') ? document.getElementById('reset-pass').value.trim() : '';
-  if(!sel || !np){ alert('اختر مستخدماً وادخل كلمة جديدة'); return; }
-  const u = findUserByUsername(sel);
-  u.password = np;
-  pushNotification('إعادة ضبط كلمة مرور', `${u.username} تم تغيير كلمة المرور`);
-  document.getElementById('reset-pass').value='';
-}
-
-/* populate select list of users */
-function populateManageList(){
-  const sel = document.getElementById('manage-user-list');
-  sel.innerHTML = '<option value="">-- اختر مستخدماً --</option>';
-  DB.users.forEach(u=>{
-    const opt = document.createElement('option'); opt.value = u.username; opt.innerText = `${u.username} (${u.role} - ${u.rank||'-'})`;
-    sel.appendChild(opt);
-  });
-}
-function fillUsersTables(){
-  // small users table used in initial UI — keep simple: update manage select and army/users table
-  populateManageList();
-  // army table
-  const tbodyArmy = document.querySelector('#army-users-table tbody');
-  if(tbodyArmy){
-    tbodyArmy.innerHTML='';
-    DB.users.forEach(u=>{
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${u.id}</td><td>${u.username}</td><td>${u.role}</td><td>${u.rank||'-'}</td><td>${u.badge||'-'}</td><td>${u.onDuty? '✅' : '❌'}</td>`;
-      tbodyArmy.appendChild(tr);
-    });
-  }
-  // users in admin table
-  const tbodyUsers = document.querySelector('#users-table tbody');
-  if(tbodyUsers){
-    tbodyUsers.innerHTML='';
-    DB.users.forEach(u=>{
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${u.id}</td><td>${u.username}</td><td>${u.role}</td><td>${u.rank||'-'}</td><td>${u.badge||'-'}</td><td>${u.onDuty? '✅' : '❌'}</td><td>${u.suspended? '✅' : '❌'}</td>`;
-      tbodyUsers.appendChild(tr);
-    });
+// Login
+function login(){
+  let u = document.getElementById('login-user').value;
+  let p = document.getElementById('login-pass').value;
+  let user = users.find(x=>x.username===u && x.password===p);
+  if(user){
+    document.getElementById('login-section').classList.add('hidden');
+    document.getElementById('dashboard-section').classList.remove('hidden');
+    document.getElementById('welcome-msg').innerText = `Welcome ${user.username} - ${user.rank} (${user.status})`;
+    renderPersons();
+    renderVehicles();
+  } else {
+    document.getElementById('login-msg').innerText='Invalid credentials';
   }
 }
 
-/* =========================
-  Criminals management (advanced table + CRUD + CSV)
-   ========================= */
-function addCriminal(){
-  const name = document.getElementById('criminal-name').value.trim();
-  const nid = document.getElementById('criminal-id').value.trim();
-  const crimes = document.getElementById('criminal-crimes').value.trim();
-  const notes = document.getElementById('criminal-notes').value.trim();
-  if(!name || !nid || !crimes) { alert('املأ الحقول المطلوبة'); return; }
-  const id = DB.criminals.length + 1;
-  DB.criminals.push({id, name, nationalId: nid, crimes, notes, createdAt: now()});
-  document.getElementById('criminal-name').value=''; document.getElementById('criminal-id').value=''; document.getElementById('criminal-crimes').value=''; document.getElementById('criminal-notes').value='';
-  renderCriminals();
-  pushNotification('سجل جنائي جديد', `${name} أضيف للسجلات`);
-  refreshStats();
+// Add person
+function addPerson(){
+  let name=document.getElementById('person-name').value;
+  let id=document.getElementById('person-id').value;
+  let address=document.getElementById('person-address').value;
+  let gender=document.getElementById('person-gender').value;
+  let type=document.getElementById('person-type').value;
+  let vehicle=document.getElementById('person-vehicle').value;
+  if(!name||!id){ alert('Name and ID required'); return; }
+  persons.push({name,id,address,gender,type,vehicle});
+  localStorage.setItem('persons',JSON.stringify(persons));
+  renderPersons();
 }
 
-function renderCriminals(){
-  const q = (document.getElementById('search-criminal').value || '').toLowerCase();
-  const container = document.getElementById('criminals-list');
-  container.innerHTML='';
-  const rows = DB.criminals.filter(c => c.name.toLowerCase().includes(q) || c.nationalId.includes(q));
-  rows.slice().reverse().forEach(c=>{
-    const div = document.createElement('div'); div.style.padding='8px'; div.style.borderBottom='1px solid rgba(255,255,255,0.03)';
-    div.innerHTML = `<div style="display:flex;justify-content:space-between"><div><b>${c.name}</b><div class="small">الرقم: ${c.nationalId} — ${c.createdAt}</div><div class="small">جرائم: ${c.crimes}</div><div class="small" style="opacity:0.9">ملاحظات: ${c.notes}</div></div><div style="text-align:left"><button class="btn ghost" onclick="editCriminal(${c.id})">تعديل</button> <button class="btn" onclick="deleteCriminal(${c.id})">حذف</button></div></div>`;
-    container.appendChild(div);
+// Render persons
+function renderPersons(){
+  let table=document.getElementById('persons-table');
+  table.innerHTML='<tr><th>Name</th><th>ID</th><th>Address</th><th>Gender</th><th>Type</th><th>Vehicle</th><th>Actions</th></tr>';
+  persons.forEach((p,i)=>{
+    let row=table.insertRow();
+    row.insertCell(0).innerText=p.name;
+    row.insertCell(1).innerText=p.id;
+    row.insertCell(2).innerText=p.address;
+    row.insertCell(3).innerText=p.gender;
+    row.insertCell(4).innerText=p.type;
+    row.insertCell(5).innerText=p.vehicle;
+    row.insertCell(6).innerHTML=`<button onclick='removePerson(${i})'>Delete</button>`;
   });
 }
+function removePerson(i){ persons.splice(i,1); localStorage.setItem('persons',JSON.stringify(persons)); renderPersons(); }
 
-function editCriminal(id){
-  const item = DB.criminals.find(x=>x.id===id);
-  if(!item) return;
-  const newName = prompt('الاسم الكامل', item.name);
-  if(newName===null) return;
-  const newNid = prompt('الرقم الوطني', item.nationalId);
-  if(newNid===null) return;
-  const newCrimes = prompt('الجرائم (مفصولة)', item.crimes);
-  if(newCrimes===null) return;
-  const newNotes = prompt('الملاحظات', item.notes);
-  item.name = newName; item.nationalId = newNid; item.crimes = newCrimes; item.notes = newNotes;
-  renderCriminals();
-  pushNotification('تم تعديل سجل', item.name);
+// Vehicles
+function addVehicle(){
+  let plate=document.getElementById('vehicle-number').value;
+  let owner=document.getElementById('vehicle-owner').value;
+  if(!plate||!owner){ alert('Plate and Owner required'); return; }
+  vehicles.push({plate,owner});
+  localStorage.setItem('vehicles',JSON.stringify(vehicles));
+  renderVehicles();
 }
-function deleteCriminal(id){
-  if(!confirm('هل تريد حذف هذا السجل؟')) return;
-  DB.criminals = DB.criminals.filter(x=>x.id!==id);
-  renderCriminals();
-  pushNotification('سجل محذوف', 'حذف سجل جنائي');
-  refreshStats();
-}
-
-function exportCriminalsCSV(){
-  const rows = DB.criminals;
-  if(rows.length===0){ alert('لا سجلات للتصدير'); return; }
-  const header = ['id','name','nationalId','crimes','notes','createdAt'];
-  const csv = [header.join(',')].concat(rows.map(r => header.map(h => `"${String(r[h]||'').replace(/"/g,'""')}"`).join(','))).join('\\n');
-  downloadBlob(csv,'criminals.csv','text/csv');
-}
-
-/* =========================
-   Export users CSV
-   ========================= */
-function exportUsersCSV(){
-  const rows = DB.users;
-  if(rows.length===0){ alert('لا مستخدمين للتصدير'); return; }
-  const header = ['id','username','role','rank','badge','onDuty','suspended','lastSeen'];
-  const csv = [header.join(',')].concat(rows.map(r => header.map(h => `"${String(r[h]||'').replace(/"/g,'""')}"`).join(','))).join('\\n');
-  downloadBlob(csv,'users.csv','text/csv');
-}
-function downloadBlob(content, filename, mime){
-  const blob = new Blob([content], {type: mime});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click();
-  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 1000);
-}
-
-/* =========================
-   Simulated real-time events
-   ========================= */
-function simulateOtherLogin(){
-  const candidates = DB.users.filter(u=>u.username!=='Dev');
-  if(candidates.length===0){ alert('لا مستخدمين آخرين حاليا'); return; }
-  const user = candidates[Math.floor(Math.random()*candidates.length)];
-  user.lastSeen = now();
-  DB.sessions.push({sessionId:uid(), username:user.username, started: now(), active:true});
-  pushNotification('دخول تجريبي', `${user.username} دخل النظام (محاكاة)`);
-  renderIncidents();
-  fillUsersTables();
-}
-
-/* =========================
-   Map markers restore from DB on init
-   ========================= */
-function restoreMarkers(){
-  markersLayer.clearLayers();
-  DB.incidents.forEach(i=>{
-    const m = L.marker([i.lat || 33.9, i.lng || -6.9]).bindPopup(`<b>${i.title}</b><div class="small">by ${i.officer}<br>${i.time}</div>`);
-    markersLayer.addLayer(m);
+function renderVehicles(){
+  let table=document.getElementById('vehicles-table');
+  table.innerHTML='<tr><th>Plate</th><th>Owner</th><th>Actions</th></tr>';
+  vehicles.forEach((v,i)=>{
+    let row=table.insertRow();
+    row.insertCell(0).innerText=v.plate;
+    row.insertCell(1).innerText=v.owner;
+    row.insertCell(2).innerHTML=`<button onclick='removeVehicle(${i})'>Delete</button>`;
   });
 }
+function removeVehicle(i){ vehicles.splice(i,1); localStorage.setItem('vehicles',JSON.stringify(vehicles)); renderVehicles(); }
 
-/* =========================
-   Init everything
-   ========================= */
-let markersLayer;
-window.addEventListener('load', ()=>{
-  initMap();
-  markersLayer = L.layerGroup().addTo(map);
-  // sample data
-  DB.users.push({id:2, username:'Officer1', password:'1234', role:'officer', rank:'Captain', badge:'007', onDuty:false, suspended:false, lastSeen:null});
-  DB.users.push({id:3, username:'Commander1', password:'abcd', role:'commander', rank:'General', badge:'001', onDuty:false, suspended:false, lastSeen:null});
-  DB.criminals.push({id:1, name:'أحمد زهران', nationalId:'A123456', crimes:'سرقة,تخريب', notes:'مطلوب محلياً', createdAt: now()});
-  addIncident({title:'حادث سطو في شارع 1', lat:33.898, lng:-6.885, officer:'Officer1', time: now()});
-  addIncident({title:'حادث مروري خطير', lat:33.91, lng:-6.92, officer:'Commander1', time: now()});
-  renderCriminals();
-  fillUsersTables();
-  refreshStats();
-  restoreMarkers();
+// Manage users
+function suspendUser(){
+  let username=document.getElementById('manage-user').value;
+  let user=users.find(u=>u.username===username);
+  if(user){ user.status='Suspended'; localStorage.setItem('users',JSON.stringify(users)); alert(`${username} Suspended`); } 
+  else alert('User not found');
+}
+function banUser(){
+  let username=document.getElementById('manage-user').value;
+  let user=users.find(u=>u.username===username);
+  if(user){ user.status='Banned'; localStorage.setItem('users',JSON.stringify(users)); alert(`${username} Banned`); } 
+  else alert('User not found');
+}
+function addXP(){
+  let username=document.getElementById('manage-user').value;
+  let xp=parseInt(document.getElementById('add-xp').value);
+  let user=users.find(u=>u.username===username);
+  if(user){ user.xp+=xp; localStorage.setItem('users',JSON.stringify(users)); alert(`${xp} XP added to ${username}`); } 
+  else alert('User not found');
+}
 
-  // simulated background events (other logins)
-  setInterval(()=>{
-    // 10% chance every 20s to simulate other login
-    if(Math.random() < 0.10){
-      if(DB.users.length>1){
-        const other = DB.users[Math.floor(Math.random()*DB.users.length)];
-        other.lastSeen = now();
-        DB.sessions.push({sessionId: uid(), username: other.username, started: now(), active:true});
-        pushNotification('دخول تلقائي', other.username + ' دخل (نشاط تلقائي)');
-        fillUsersTables();
-      }
-    }
-  }, 20000);
-});
+// Init
+renderPersons();
+renderVehicles();
 </script>
-
 </body>
 </html>
